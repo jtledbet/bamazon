@@ -23,7 +23,9 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   // run the afterConnection function after the connection is made to prompt the user
-  console.log("connected as id " + connection.threadId);
+  // console.log("connected as id " + connection.threadId);
+  
+  console.log("Welcome to Bamazon!")
   displayMenu();
 });
 
@@ -33,14 +35,15 @@ function displayMenu() {
   var query = "SELECT id, product_name, price FROM products"
   connection.query(query, function (err, res) {
     if (err) throw err;
-    console.log(res);
+    // console.log(res);
 
-    console.log(`id   product  price`);
-    for (i = 0; i < res.length; i++) {
-      console.log(`${('0' + res[i].id).slice(-2)}   ${res[i].product_name}    ${res[i].price}`)
-    }
+    // console.log(`id   product  price`);
+    // for (i = 0; i < res.length; i++) {
+    //   console.log(`${('0' + res[i].id).slice(-2)}   ${res[i].product_name}    ${res[i].price}`)
+    // }
 
-    // console.table(res);
+
+    console.table(res);
 
     var maxID = 0;
     for (var i = 0; i < res.length; i++) {
@@ -69,7 +72,7 @@ function displayMenu() {
       }
     ]).then(function (answers) {
 
-      console.log(answers);
+      // console.log(answers);
       var productID = answers.productSelectionIndex;
       var desiredQuantity = answers.desiredQuantity;
 
@@ -84,7 +87,7 @@ function displayMenu() {
           if (err) throw err;
 
           // console.log(res);
-          console.log(res[0].stock_quantity);
+          // console.log(res[0].stock_quantity);
           var desiredProduct = res[0].product_name;
           var availableQuantity = res[0].stock_quantity;
 
@@ -94,7 +97,7 @@ function displayMenu() {
             console.log("Only " + availableQuantity + " " + desiredProduct + " remain.")
             buySomethingElse();
           } else {
-            console.log("Okay, lemme go get your " + desiredProduct + ".");
+            console.log("Okay! Let me go get your " + desiredProduct + ".");
 
             // Update stock quantities:
             var newQuantity = availableQuantity - desiredQuantity;
@@ -110,11 +113,15 @@ function displayMenu() {
 
               var unitPrice = res[productID - 1].price;
               var total = (unitPrice * desiredQuantity);
-              totalCost += total;
 
-              console.log (unitPrice + " * " + desiredQuantity + " = " + total)
+
+              total = roundMe(total)
+              totalCost = parseFloat(totalCost) + parseFloat(total)
+              totalCost = roundMe(totalCost)
+
+              // console.log (unitPrice + " * " + desiredQuantity + " = " + total)
               console.log ("Your total purchase price was $" + total + ".");
-              console.log ("You have spent a total of $" + totalCost + ".");
+              
               buySomethingElse();
             })
           };
@@ -124,19 +131,25 @@ function displayMenu() {
 }  
 
 function buySomethingElse () {
+  console.log ("You have spent a total of $" + totalCost + ".");
   inquirer.prompt({
     name: "continue",
     type: "confirm",
     message: "Would you like to buy something else? ",
     default: true
   }).then(function (answer) {
-    console.log(answer)
+    // console.log(answer)
     if (answer.continue) {
       displayMenu();
     }
     else {
+      console.log("Thank you for shopping with Bamazon!")
       connection.end();
       return;
     }
   })
+}
+
+function roundMe(num) {
+  return parseFloat(Math.round(num * 100) / 100).toFixed(2);
 }
