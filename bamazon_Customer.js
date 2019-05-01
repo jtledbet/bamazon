@@ -94,41 +94,49 @@ function displayMenu() {
           // Not enough of product in stock:
           if (desiredQuantity > availableQuantity) {
             console.log("Insufficient quantity available in stock!")
-            console.log("Only " + availableQuantity + " " + desiredProduct + " remain.")
-            buySomethingElse();
-          } else {
-            console.log("Okay! Let me go get your " + desiredProduct + ".");
-
-            // Update stock quantities:
-            var newQuantity = availableQuantity - desiredQuantity;
-            var query = "UPDATE products SET stock_quantity = " + newQuantity + " WHERE id = " + productID;
-            connection.query(query, function (err, res) {
-              if (err) throw err;
-            })
-
-            // Calculate total cost:
-            var query = "SELECT id, product_name, price FROM products"
-            connection.query(query, function (err, res) {
-              if (err) throw err;
-
-              var unitPrice = res[productID - 1].price;
-              var total = (unitPrice * desiredQuantity);
-
-
-              total = roundMe(total)
-              totalCost = parseFloat(totalCost) + parseFloat(total)
-              totalCost = roundMe(totalCost)
-
-              // console.log (unitPrice + " * " + desiredQuantity + " = " + total)
-              console.log ("Your total purchase price was $" + total + ".");
-              
+            if (availableQuantity === 0) {
+              console.log("There are no " + desiredProduct + " in stock at this time.")
               buySomethingElse();
-            })
-          };
+            } else {
+                console.log("Only " + availableQuantity + " " + desiredProduct + " remain.")
+                buyMeOut(desiredProduct, availableQuantity, desiredQuantity, productID);
+            }
+          } else purchaseItem(desiredProduct, availableQuantity, desiredQuantity, productID);
         });
     });
   })
 }  
+
+function purchaseItem(desiredProduct, availableQuantity, desiredQuantity, productID) {
+
+  console.log("Okay! Let me go get your " + desiredProduct + ".");
+
+    // Update stock quantities:
+    var newQuantity = availableQuantity - desiredQuantity;
+    var query = "UPDATE products SET stock_quantity = " + newQuantity + " WHERE id = " + productID;
+    connection.query(query, function (err, res) {
+      if (err) throw err;
+    })
+
+    // Calculate total cost:
+    var query = "SELECT id, product_name, price FROM products"
+    connection.query(query, function (err, res) {
+      if (err) throw err;
+
+      var unitPrice = res[productID - 1].price;
+      var total = (unitPrice * desiredQuantity);
+
+
+      total = roundMe(total)
+      totalCost = parseFloat(totalCost) + parseFloat(total)
+      totalCost = roundMe(totalCost)
+
+      // console.log (unitPrice + " * " + desiredQuantity + " = " + total)
+      console.log ("Your total purchase price was $" + total + ".");
+      
+      buySomethingElse();
+    })
+}
 
 function buySomethingElse () {
   console.log ("You have spent a total of $" + totalCost + ".");
@@ -146,6 +154,23 @@ function buySomethingElse () {
       console.log("Thank you for shopping with Bamazon!")
       connection.end();
       return;
+    }
+  })
+}
+
+function buyMeOut (desiredProduct, availableQuantity, desiredQuantity, productID) {
+  inquirer.prompt({
+    name: "buyout",
+    type: "confirm",
+    message: "Would you like to purchase the remaining " + availableQuantity + " " + desiredProduct + "?",
+    default: true
+  }).then(function (answer) {
+    // console.log(answer)
+    if (answer.buyout) {
+      purchaseItem(desiredProduct, availableQuantity, desiredQuantity, productID)
+    }
+    else {
+      buySomethingElse();
     }
   })
 }
