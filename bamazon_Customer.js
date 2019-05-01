@@ -113,6 +113,7 @@ function purchaseItem(desiredProduct, availableQuantity, desiredQuantity, produc
 
     // Update stock quantities:
     var newQuantity = availableQuantity - desiredQuantity;
+      if (newQuantity < 0) newQuantity = 0;
     var query = "UPDATE products SET stock_quantity = " + newQuantity + " WHERE id = " + productID;
     connection.query(query, function (err, res) {
       if (err) throw err;
